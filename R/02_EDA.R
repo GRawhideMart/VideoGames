@@ -31,3 +31,10 @@ top_three_genres <- vgames %>%
     arrange(desc(Global_Sales)) %>%
     top_n(3)
 View(top_three_genres)
+
+average_sales <- vgames %>%
+    inner_join(top_three_genres, by = c('Genre')) %>%
+    group_by(Genre) %>%
+    summarize(Japan = mean(JP_Sales), Europe = mean(EU_Sales), "North America" = mean(NA_Sales), Global = mean(Global_Sales.x)) %>%
+    pivot_longer(c(Japan, Europe, "North America", Global), names_to = "Continent", values_to = "Average")
+View(average_sales)
