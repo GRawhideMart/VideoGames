@@ -38,3 +38,17 @@ average_sales <- vgames %>%
     summarize(Japan = mean(JP_Sales), Europe = mean(EU_Sales), "North America" = mean(NA_Sales), Global = mean(Global_Sales.x)) %>%
     pivot_longer(c(Japan, Europe, "North America", Global), names_to = "Continent", values_to = "Average")
 View(average_sales)
+
+ggplot(average_sales, aes(x = Genre, y = Average, fill = Genre)) +
+    geom_col() +
+    coord_flip() +
+    facet_wrap(~Continent) +
+    labs(title = "Average sales of top 3 genres by zone") +
+    theme(legend.position = "none")
+ggsave(filename = "graphs/02_AvgSalesTop3ByZone.png", device = "png")
+
+japan_top_genres <- vgames %>%
+    group_by(Genre) %>%
+    summarize(Japanese_Sales = sum(JP_Sales)) %>%
+    arrange
+View(japan_top_genres)
