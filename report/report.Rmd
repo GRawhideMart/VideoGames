@@ -1,0 +1,112 @@
+---
+title: "Videogames"
+author: "Giulio Mario Martena"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(tidymodels))
+suppressPackageStartupMessages(library(xgboost))
+```
+
+```{r startup, warning=FALSE}
+vgames <- read_csv('../data/vgsales.csv', show_col_types = FALSE, col_types = list(
+    Year = col_date("%Y")
+))
+
+vgames <- vgames %>%
+    mutate(
+        Platform = factor(Platform),
+        Genre = factor(Genre),
+        Publisher = factor(Publisher),
+        EU_Sales = 1e6 * EU_Sales,
+        NA_Sales = 1e6 * NA_Sales,
+        JP_Sales = 1e6 * JP_Sales,
+        Other_Sales = 1e6 * Other_Sales,
+        Global_Sales = 1e6 * Global_Sales
+    )
+
+JP_low <- IQR(vgames$JP_Sales) - 1.5 * as.numeric(quantile(vgames$JP_Sales, .25))
+JP_high <- IQR(vgames$JP_Sales) + 1.5 * as.numeric(quantile(vgames$JP_Sales, .75))
+EU_low <- IQR(vgames$EU_Sales) - 1.5 * as.numeric(quantile(vgames$EU_Sales, .25))
+EU_high <- IQR(vgames$EU_Sales) + 1.5 * as.numeric(quantile(vgames$EU_Sales, .75))
+NA_low <- IQR(vgames$NA_Sales) - 1.5 * as.numeric(quantile(vgames$NA_Sales, .25))
+NA_high <- IQR(vgames$NA_Sales) + 1.5 * as.numeric(quantile(vgames$NA_Sales, .75))
+Other_low <- IQR(vgames$Other_Sales) - 1.5 * as.numeric(quantile(vgames$Other_Sales, .25))
+Other_high <- IQR(vgames$Other_Sales) + 1.5 * as.numeric(quantile(vgames$Other_Sales, .75))
+Global_low <- IQR(vgames$Global_Sales) - 1.5 * as.numeric(quantile(vgames$Global_Sales, .25))
+Global_high <- IQR(vgames$Global_Sales) + 1.5 * as.numeric(quantile(vgames$Global_Sales, .75))
+
+vgames <- vgames %>%
+    mutate(
+        JP_Out = ifelse(JP_Sales < JP_low | JP_Sales > JP_high, TRUE, FALSE),
+        EU_Out = ifelse(EU_Sales < EU_low | EU_Sales > EU_high, TRUE, FALSE),
+        NA_Out = ifelse(NA_Sales < NA_low | NA_Sales > NA_high, TRUE, FALSE),
+        Other_Out = ifelse(Other_Sales < Other_low | Other_Sales > Other_high, TRUE, FALSE),
+        Global_Out = ifelse(Global_Sales < Global_low | Global_Sales > Global_high, TRUE, FALSE)
+    )
+vgames
+```
+
+```{r EDA_1}
+# Which of the seventh gen consoles sold the most?
+top_three_consoles <- vgames %>%
+    
+    # group by platform
+    group_by(Platform) %>%
+    
+    # consider only platforms of interest
+    filter(Platform %in% c("X360", "PS3", "Wii")) %>%
+    
+    # get the sum of the worldwide sales
+    summarize(Global_sales = sum(Global_Sales)) %>%
+    
+    # sort in decreasing order
+    arrange(desc(Global_sales))
+
+top_three_consoles
+```
+
+```{r EDA_1_plot}
+# Plot and save console popularity barchart
+ggplot(top_three_consoles, aes(x = Platform, y = Global_sales, fill = Platform)) + 
+    geom_col() +
+    coord_flip() +
+    theme(legend.position = "none") +
+    labs(x = "Platform", y = "Global Sales", title = "Global sales comparison")
+```
+
+```{r EDA_2}
+top_three_genres <- vgames %>%
+    group_by(Genre) %>%
+    summarize(Global_Sales = sum(Global_Sales)) %>%
+    arrange(desc(Global_Sales)) %>%
+    top_n(3)
+
+average_sales <- vgames %>%
+    inner_join(top_three_genres, by = c('Genre')) %>%
+    group_by(Genre) %>%
+    summarize(Japan = mean(JP_Sales), Europe = mean(EU_Sales), "North America" = mean(NA_Sales), Global = mean(Global_Sales.x)) %>%
+    pivot_longer(c(Japan, Europe, "North America", Global), names_to = "Continent", values_to = "Average")
+average_sales
+```
+
+```{r EDA_2_plot}
+ggplot(average_sales, aes(x = Genre, y = Average, fill = Genre)) +
+    geom_col() +
+    coord_flip() +
+    facet_wrap(~Continent) +
+    labs(title = "Average sales of top 3 genres by zone") +
+    theme(legend.position = "none")
+```
+
+```{r EDA_3}
+japan_top_genres <- vgames %>%
+    group_by(Genre) %>%
+    summarize(Japanese_Sales = sum(JP_Sales)) %>%
+    arrange(desc(Japanese_Sales))
+japan_top_genres
+```
