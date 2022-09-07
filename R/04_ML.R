@@ -1,10 +1,4 @@
-# Train test split
-vgames_split <- vgames %>% initial_split()
-vgames_training <- vgames_split %>% training()
-vgames_testing <- vgames_split %>% testing()
 
-# Folds for CV
-vgames_folds <- vgames_training %>% vfold_cv(v = 10)
 
 # Preprocessing recipe
 vgames_rec <- recipe(
