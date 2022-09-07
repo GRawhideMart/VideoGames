@@ -1,19 +1,3 @@
-# Train test split
-vgames_split <- vgames %>% initial_split()
-vgames_training <- vgames_split %>% training()
-vgames_testing <- vgames_split %>% testing()
-
-# Folds for CV
-vgames_folds <- vgames_training %>% vfold_cv(v = 10)
-
-# Preprocessing recipe
-vgames_rec <- recipe(
-    vgames_training,
-    formula = JP_Sales ~ EU_Sales + NA_Sales + Platform + Publisher
-) %>%
-    step_normalize(all_numeric(), -all_outcomes()) %>%
-    step_corr(all_numeric(), -all_outcomes()) %>%
-    step_dummy(all_nominal())
 
 boost_model <- boost_tree() %>%
     set_mode("regression") %>%
@@ -21,7 +5,7 @@ boost_model <- boost_tree() %>%
 
 boost_wf <- workflow() %>%
     add_model(boost_model) %>%
-    add_recipe(vgames_rec)
+    add_recipe(vgames_recipe)
 
 boost_cv <- (
     boost_wf %>%

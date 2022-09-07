@@ -5,3 +5,5 @@ suppressPackageStartupMessages(library(xgboost))
 if(!dir.exists("graphs")) {
     dir.create("graphs")
 }
+
+set.seed(1399)
