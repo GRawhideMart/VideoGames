@@ -7,4 +7,5 @@ vgames <- vgames %>%
         Platform = factor(Platform),
         Genre = factor(Genre),
         Publisher = factor(Publisher)
-    )
+    ) %>%
+    drop_na()
