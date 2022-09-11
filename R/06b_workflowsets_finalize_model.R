@@ -15,6 +15,9 @@ best_model <- vgames_models %>%
     extract_workflow_set_result(vgames_best_model_id) %>%
     select_best(metric = "mae")
 
+# Print best model parameters
+print(best_model %>% select(-.config))
+
 # Finalize the model
 vgames_finalized_model <- vgames_models %>%
     extract_workflow(vgames_best_model_id) %>%
