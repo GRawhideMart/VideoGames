@@ -10,11 +10,3 @@ vgames_testing <- vgames_split %>% testing()
 
 # Folds for CV
 vgames_folds <- vgames_training %>% vfold_cv(v = 10)
-
-# Recipe
-vgames_recipe <- vgames_training %>%
-    recipe(formula = JP_Sales ~ .) %>%
-    step_normalize(all_numeric_predictors()) %>%
-    step_date(Year, features = c("year"), keep_original_cols = FALSE) %>%
-    step_dummy(all_nominal()) %>%
-    step_zv(all_numeric_predictors())
